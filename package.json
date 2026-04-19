@@ -1,0 +1,16 @@
+{
+  "name": "card-arena-10-online",
+  "version": "1.0.0",
+  "description": "Online multiplayer card game hub with accounts, chips, and leaderboard",
+  "main": "server.js",
+  "type": "commonjs",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.19.2",
+    "socket.io": "^4.8.1",
+    "uuid": "^11.0.3"
+  }
+}
