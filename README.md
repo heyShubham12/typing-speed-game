@@ -1,4 +1,4 @@
-# Neon Type Sprint
+# Typing Speed Game
 
 A colorful, session-based typing speed game with WPM reporting.
 

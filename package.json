@@ -1,7 +1,7 @@
 {
-  "name": "card-arena-10-online",
+  "name": "typing-speed-game",
   "version": "1.0.0",
-  "description": "Online multiplayer card game hub with accounts, chips, and leaderboard",
+  "description": "Typing Speed Game with colorful UI, WPM stats, and session leaderboard",
   "main": "server.js",
   "type": "commonjs",
   "scripts": {
