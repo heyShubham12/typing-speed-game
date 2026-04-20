@@ -84,6 +84,28 @@ h2 {
   margin-bottom: 1rem;
 }
 
+.tagline {
+  margin: 0.4rem 0 0;
+  max-width: 560px;
+  color: #cbe7f7;
+}
+
+.accent-cards {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.65rem;
+  margin-bottom: 0.9rem;
+}
+
+.accent-card {
+  border: 1px solid rgba(255, 255, 255, 0.13);
+  border-radius: 12px;
+  background: linear-gradient(130deg, rgba(255, 79, 139, 0.14), rgba(63, 224, 255, 0.12));
+  padding: 0.55rem 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+}
+
 .podium-strip {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -250,6 +272,11 @@ button {
   cursor: pointer;
 }
 
+button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
 button.ghost {
   background: transparent;
   color: var(--cyan);
@@ -411,6 +438,7 @@ button.ghost {
 }
 
 @media (max-width: 900px) {
+  .accent-cards,
   .podium-strip,
   .layout,
   .stat-grid {

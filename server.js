@@ -1,3 +1,4 @@
+const fs = require("fs");
 const path = require("path");
 const express = require("express");
 const { v4: uuidv4 } = require("uuid");
@@ -6,6 +7,8 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 const SESSION_TTL_MS = 20 * 60 * 1000;
 const IS_DEV = process.env.NODE_ENV !== "production";
+const DIST_DIR = path.join(__dirname, "dist");
+const HAS_DIST = fs.existsSync(path.join(DIST_DIR, "index.html"));
 
 const sessions = new Map();
 
@@ -38,13 +41,18 @@ if (IS_DEV) {
   });
 }
 
-app.use(
-  express.static(path.join(__dirname, "public"), {
-    etag: !IS_DEV,
-    lastModified: !IS_DEV,
-    maxAge: IS_DEV ? 0 : "1d",
-  })
-);
+if (HAS_DIST) {
+  app.use(
+    express.static(DIST_DIR, {
+      etag: !IS_DEV,
+      lastModified: !IS_DEV,
+      maxAge: IS_DEV ? 0 : "1d",
+    })
+  );
+} else {
+  // eslint-disable-next-line no-console
+  console.warn("No frontend build found in ./dist. Run npm run build or npm run dev for frontend.");
+}
 
 function now() {
   return Date.now();
@@ -196,6 +204,17 @@ app.post("/api/score", (req, res) => {
     attempts: session.scores.length,
   });
 });
+
+if (HAS_DIST) {
+  app.get("*", (req, res, next) => {
+    if (req.path.startsWith("/api/")) return next();
+    return res.sendFile(path.join(DIST_DIR, "index.html"));
+  });
+} else {
+  app.get("/", (req, res) => {
+    res.status(503).send("Frontend build not found. Run npm run build or npm run dev.");
+  });
+}
 
 setInterval(() => {
   const cutoff = now();

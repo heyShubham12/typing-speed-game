@@ -26,10 +26,24 @@ A colorful, session-based typing speed game with WPM reporting.
 4. `GET /api/passage` -> random typing passage
 5. `POST /api/score` -> store score in current session
 
-## Run
+## Run in development
 
 ```bash
 npm install
+npm run dev
+```
+
+Open:
+
+```text
+Frontend: http://localhost:5173
+Backend API: http://localhost:3000
+```
+
+## Build for production
+
+```bash
+npm run build
 npm start
 ```
 
@@ -58,6 +72,6 @@ From this project directory, run:
 1. `gcloud auth login`
 2. `gcloud config set project YOUR_PROJECT_ID`
 3. `gcloud services enable run.googleapis.com cloudbuild.googleapis.com artifactregistry.googleapis.com`
-4. `gcloud run deploy neon-type-sprint --source . --region asia-south1 --allow-unauthenticated`
+4. `gcloud run deploy typing-speed-game --source . --region asia-south1 --allow-unauthenticated`
 
 After deploy, Google Cloud will print a public HTTPS URL for the live app.

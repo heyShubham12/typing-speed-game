@@ -5,12 +5,24 @@
   "main": "server.js",
   "type": "commonjs",
   "scripts": {
+    "build": "vite build",
+    "dev:client": "vite",
+    "dev:server": "node server.js",
+    "dev": "concurrently \"npm run dev:server\" \"npm run dev:client\"",
+    "preview": "vite preview",
     "start": "node server.js",
-    "dev": "node server.js"
+    "start:server": "node server.js"
   },
   "dependencies": {
     "express": "^4.19.2",
+    "react": "^19.2.5",
+    "react-dom": "^19.2.5",
     "socket.io": "^4.8.1",
     "uuid": "^11.0.3"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^6.0.1",
+    "concurrently": "^9.2.1",
+    "vite": "^8.0.9"
   }
 }
