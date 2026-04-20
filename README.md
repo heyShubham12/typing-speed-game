@@ -75,3 +75,23 @@ From this project directory, run:
 4. `gcloud run deploy typing-speed-game --source . --region asia-south1 --allow-unauthenticated`
 
 After deploy, Google Cloud will print a public HTTPS URL for the live app.
+
+## Free Deployment (Render)
+
+One-click deploy:
+
+[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/heyShubham12/typing-speed-game)
+
+Manual setup on Render free tier:
+
+1. Sign in to Render with your GitHub account.
+2. Create a new `Web Service` from this repository.
+3. Use build command: `npm ci && npm run build`.
+4. Use start command: `npm start`.
+5. Set `NODE_ENV=production`.
+6. Deploy.
+
+Notes:
+
+1. Render free services can sleep when idle and may take a few seconds to wake up.
+2. Session data and leaderboard are in memory and reset on restart/redeploy.
