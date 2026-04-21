@@ -407,14 +407,19 @@ export default function App() {
     window.addEventListener("resize", resizeParticleCanvas);
 
     (async function init() {
-      resizeParticleCanvas();
-      await ensureSession();
-      await loadPassage();
-      await loadActiveLeaderboard();
-      updateSessionTimer();
-      refs.roundTimer.textContent = String(state.roundDuration);
-      refs.typingInput.disabled = true;
-      setStatus("Ready. 60-second challenge is set. Hit Start Round.");
+      try {
+        resizeParticleCanvas();
+        await ensureSession();
+        await loadPassage();
+        await loadActiveLeaderboard();
+        updateSessionTimer();
+        refs.roundTimer.textContent = String(state.roundDuration);
+        refs.typingInput.disabled = true;
+        setStatus("Ready. 60-second challenge is set. Hit Start Round.");
+      } catch (err) {
+        refs.typingInput.disabled = true;
+        setStatus(`Backend unavailable: ${err.message}`);
+      }
     })();
 
     return () => {
