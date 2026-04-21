@@ -19,6 +19,9 @@ export default function App() {
       expiresAt: Number(localStorage.getItem(EXPIRES_KEY) || 0),
       offlineMode: false,
       passage: "",
+      passageChars: [],
+      charSpans: [],
+      prevInput: "",
       roundDuration: 60,
       roundTimeLeft: 60,
       startedAt: 0,
@@ -293,35 +296,62 @@ export default function App() {
       if (state.offlineMode) {
         const index = Math.floor(Math.random() * LOCAL_PASSAGES.length);
         state.passage = LOCAL_PASSAGES[index];
+        initPassageDom();
         renderPassage("");
         return;
       }
 
       const data = await api("/api/passage", { method: "GET" });
       state.passage = String(data.passage || "");
+      initPassageDom();
       renderPassage("");
+    }
+
+    function initPassageDom() {
+      state.passageChars = Array.from(state.passage);
+      state.charSpans = [];
+      state.prevInput = "";
+
+      refs.passage.textContent = "";
+      const fragment = document.createDocumentFragment();
+      for (let i = 0; i < state.passageChars.length; i += 1) {
+        const span = document.createElement("span");
+        span.className = "char";
+        span.textContent = state.passageChars[i];
+        state.charSpans.push(span);
+        fragment.appendChild(span);
+      }
+      refs.passage.appendChild(fragment);
     }
 
     function renderPassage(input) {
       const typed = input || "";
-      const chars = state.passage.split("");
-      refs.passage.innerHTML = chars
-        .map((char, index) => {
-          let cls = "char";
-          if (index < typed.length) {
-            cls += typed[index] === char ? " correct" : " incorrect";
-          } else if (index === typed.length && state.running) {
-            cls += " current";
-          }
-          const safe = char === " " ? " " : char;
-          return `<span class='${cls}'>${safe}</span>`;
-        })
-        .join("");
+      const typedLen = typed.length;
+      const charsLen = state.passageChars.length;
+
+      for (let index = 0; index < charsLen; index += 1) {
+        let cls = "char";
+        if (index < typedLen) {
+          cls += typed[index] === state.passageChars[index] ? " correct" : " incorrect";
+        } else if (index === typedLen && state.running) {
+          cls += " current";
+        }
+
+        const span = state.charSpans[index];
+        if (span && span.className !== cls) {
+          span.className = cls;
+        }
+      }
+
+      state.prevInput = typed;
     }
 
     function liveMetrics(input) {
       const typed = input.length;
-      const correct = input.split("").filter((c, i) => c === state.passage[i]).length;
+      let correct = 0;
+      for (let i = 0; i < typed; i += 1) {
+        if (input[i] === state.passageChars[i]) correct += 1;
+      }
       state.correctChars = correct;
       state.typedChars = typed;
 
@@ -587,7 +617,14 @@ export default function App() {
         <section className="panel typing-panel">
           <h2>Typing Area</h2>
           <div id="passage" className="passage"></div>
-          <textarea id="typingInput" placeholder="Start the round, then type here..." disabled></textarea>
+          <textarea
+            id="typingInput"
+            placeholder="Start the round, then type here..."
+            disabled
+            spellCheck={false}
+            autoCorrect="off"
+            autoCapitalize="off"
+          ></textarea>
         </section>
 
         <section className="panel result-panel" id="resultPanel">
