@@ -3,6 +3,7 @@ import { useEffect } from "react";
 const PLAYER_KEY = "typingPlayerId";
 const EXPIRES_KEY = "typingSessionExpiresAt";
 const LOCAL_SCORES_KEY = "typingLocalScores";
+const LOCAL_HISTORY_KEY = "typingPersonalHistory";
 const SESSION_TTL_MS = 20 * 60 * 1000;
 
 const LOCAL_PASSAGES = [
@@ -54,6 +55,8 @@ export default function App() {
       refreshBoardBtn: document.getElementById("refreshBoardBtn"),
       leaderboardList: document.getElementById("leaderboardList"),
       activeSessionsMeta: document.getElementById("activeSessionsMeta"),
+      historyBars: document.getElementById("historyBars"),
+      historyMeta: document.getElementById("historyMeta"),
       particleCanvas: document.getElementById("particleCanvas"),
     };
 
@@ -92,6 +95,59 @@ export default function App() {
 
     function saveLocalScores(scores) {
       localStorage.setItem(LOCAL_SCORES_KEY, JSON.stringify(scores));
+    }
+
+    function loadPersonalHistory() {
+      try {
+        const raw = localStorage.getItem(LOCAL_HISTORY_KEY);
+        const parsed = raw ? JSON.parse(raw) : [];
+        if (!Array.isArray(parsed)) return [];
+        return parsed.filter((entry) => Number.isFinite(entry?.wpm) && Number.isFinite(entry?.accuracy));
+      } catch {
+        return [];
+      }
+    }
+
+    function savePersonalHistory(history) {
+      localStorage.setItem(LOCAL_HISTORY_KEY, JSON.stringify(history));
+    }
+
+    function renderPersonalHistory(history) {
+      const rows = Array.isArray(history) ? history : [];
+      if (!refs.historyBars || !refs.historyMeta) return;
+
+      if (!rows.length) {
+        refs.historyMeta.textContent = "No runs yet. Complete a round to build your chart.";
+        refs.historyBars.innerHTML = "<div class='status'>History chart will appear here after your first run.</div>";
+        return;
+      }
+
+      const recent = rows.slice(-12);
+      const maxWpm = Math.max(1, ...recent.map((r) => r.wpm));
+      const bestWpm = Math.max(...rows.map((r) => r.wpm));
+      const avgWpm = Math.round(rows.reduce((sum, r) => sum + r.wpm, 0) / rows.length);
+
+      refs.historyBars.innerHTML = recent
+        .map((entry) => {
+          const height = Math.max(10, Math.round((entry.wpm / maxWpm) * 100));
+          return (
+            `<div class='hist-col'>` +
+            `<span class='hist-bar' style='height:${height}%' title='${entry.wpm} WPM'></span>` +
+            `<span class='hist-val'>${entry.wpm}</span>` +
+            `</div>`
+          );
+        })
+        .join("");
+
+      refs.historyMeta.textContent = `Last ${recent.length} runs | Best ${bestWpm} WPM | Avg ${avgWpm} WPM`;
+    }
+
+    function addPersonalHistoryEntry(wpm, accuracy) {
+      const history = loadPersonalHistory();
+      history.push({ wpm, accuracy, at: Date.now() });
+      const trimmed = history.slice(-50);
+      savePersonalHistory(trimmed);
+      renderPersonalHistory(trimmed);
     }
 
     function ensureOfflineSession() {
@@ -392,6 +448,7 @@ export default function App() {
       spawnBurst(tier);
 
       setStatus("Round finished. Start a new one to beat your score.");
+      addPersonalHistoryEntry(wpm, acc);
 
       if (state.offlineMode) {
         const scores = loadLocalScores();
@@ -519,6 +576,7 @@ export default function App() {
         await ensureSession();
         await loadPassage();
         await loadActiveLeaderboard();
+        renderPersonalHistory(loadPersonalHistory());
         updateSessionTimer();
         refs.roundTimer.textContent = String(state.roundDuration);
         refs.typingInput.disabled = true;
@@ -532,6 +590,7 @@ export default function App() {
         ensureOfflineSession();
         await loadPassage();
         await loadActiveLeaderboard();
+        renderPersonalHistory(loadPersonalHistory());
         updateSessionTimer();
         refs.roundTimer.textContent = String(state.roundDuration);
         refs.typingInput.disabled = true;
@@ -641,6 +700,14 @@ export default function App() {
           <p>
             Best this session: <strong id="bestWpm">0</strong> WPM
           </p>
+        </section>
+
+        <section className="panel history-panel">
+          <h2>Personal Best History</h2>
+          <div id="historyMeta" className="status">
+            Loading history...
+          </div>
+          <div id="historyBars" className="history-bars"></div>
         </section>
 
         <section className="panel">

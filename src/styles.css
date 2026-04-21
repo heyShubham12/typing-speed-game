@@ -126,7 +126,8 @@ h2 {
 }
 
 .typing-panel,
-.result-panel {
+.result-panel,
+.history-panel {
   grid-column: 1 / -1;
 }
 
@@ -281,6 +282,38 @@ button.ghost {
 .result-main {
   margin-top: 0.45rem;
   font-size: 1.2rem;
+}
+
+.history-bars {
+  margin-top: 0.7rem;
+  min-height: 160px;
+  padding: 0.55rem;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(0, 0, 0, 0.2);
+  display: flex;
+  align-items: flex-end;
+  gap: 0.35rem;
+}
+
+.hist-col {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.hist-bar {
+  width: 100%;
+  border-radius: 6px 6px 2px 2px;
+  background: linear-gradient(180deg, var(--cyan), var(--pink));
+}
+
+.hist-val {
+  font-size: 0.72rem;
+  color: var(--muted);
 }
 
 .leader-head {
