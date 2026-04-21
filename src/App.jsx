@@ -2,12 +2,22 @@ import { useEffect } from "react";
 
 const PLAYER_KEY = "typingPlayerId";
 const EXPIRES_KEY = "typingSessionExpiresAt";
+const LOCAL_SCORES_KEY = "typingLocalScores";
+const SESSION_TTL_MS = 20 * 60 * 1000;
+
+const LOCAL_PASSAGES = [
+  "India's digital public infrastructure has changed how citizens access payments and services. For typists, this passage is perfect for rhythm training because it mixes long policy words with short connectors, forcing you to balance accuracy and speed under time pressure.",
+  "Metro expansion in major Indian cities has highlighted the importance of integrated mobility where buses, walking networks, and rail systems work together. Practice this text to improve consistency across punctuation, capitals, and natural pauses while maintaining steady WPM.",
+  "India's renewable energy transition now depends not only on generation capacity but also on transmission planning and storage reliability. Use this paragraph to train endurance over longer sentences and improve correction habits when mistakes appear mid-word.",
+  "Foundational literacy and numeracy initiatives across states are focusing on classroom support, assessment quality, and teacher mentoring. This passage helps you practice clean finger movement through repeated academic terms while keeping line-level concentration.",
+];
 
 export default function App() {
   useEffect(() => {
     const state = {
       playerId: localStorage.getItem(PLAYER_KEY) || "",
       expiresAt: Number(localStorage.getItem(EXPIRES_KEY) || 0),
+      offlineMode: false,
       passage: "",
       roundDuration: 60,
       roundTimeLeft: 60,
@@ -64,6 +74,33 @@ export default function App() {
 
     function setStatus(text) {
       refs.statusText.textContent = text;
+    }
+
+    function maskPlayerId(playerId) {
+      return `${playerId.slice(0, 8)}...${playerId.slice(-2)}`;
+    }
+
+    function loadLocalScores() {
+      try {
+        const raw = localStorage.getItem(LOCAL_SCORES_KEY);
+        const parsed = raw ? JSON.parse(raw) : [];
+        return Array.isArray(parsed) ? parsed : [];
+      } catch {
+        return [];
+      }
+    }
+
+    function saveLocalScores(scores) {
+      localStorage.setItem(LOCAL_SCORES_KEY, JSON.stringify(scores));
+    }
+
+    function ensureOfflineSession() {
+      if (!state.playerId) {
+        state.playerId = `PLY-LOCAL-${Math.random().toString(36).slice(2, 8).toUpperCase()}`;
+      }
+      state.expiresAt = Date.now() + SESSION_TTL_MS;
+      saveSession();
+      refs.playerId.textContent = state.playerId;
     }
 
     function getTier(wpm) {
@@ -195,6 +232,27 @@ export default function App() {
     }
 
     async function loadActiveLeaderboard() {
+      if (state.offlineMode) {
+        const rows = loadLocalScores()
+          .sort((a, b) => {
+            if (b.bestWpm !== a.bestWpm) return b.bestWpm - a.bestWpm;
+            if (b.attempts !== a.attempts) return b.attempts - a.attempts;
+            return b.lastScoreAt - a.lastScoreAt;
+          })
+          .slice(0, 15)
+          .map((row) => ({
+            maskedPlayerId: maskPlayerId(row.playerId),
+            bestWpm: row.bestWpm,
+            attempts: row.attempts,
+          }));
+
+        renderLeaderboard({
+          leaderboard: rows,
+          activeSessions: rows.length,
+        });
+        return;
+      }
+
       try {
         const data = await api("/api/leaderboard/active?limit=15", { method: "GET" });
         renderLeaderboard(data);
@@ -209,6 +267,11 @@ export default function App() {
     }
 
     async function ensureSession() {
+      if (state.offlineMode) {
+        ensureOfflineSession();
+        return;
+      }
+
       try {
         if (state.playerId) {
           const data = await api(`/api/session/${encodeURIComponent(state.playerId)}`, { method: "GET" });
@@ -222,14 +285,24 @@ export default function App() {
         // Expired/invalid: create a fresh session.
       }
 
-      const data = await api("/api/session/new", { method: "POST" });
-      state.playerId = data.playerId;
-      state.expiresAt = data.expiresAt;
-      saveSession();
-      refs.playerId.textContent = state.playerId;
+      try {
+        const data = await api("/api/session/new", { method: "POST" });
+        state.playerId = data.playerId;
+        state.expiresAt = data.expiresAt;
+        saveSession();
+        refs.playerId.textContent = state.playerId;
+      } catch {
+        state.offlineMode = true;
+        ensureOfflineSession();
+      }
     }
 
     async function renewSession() {
+      if (state.offlineMode) {
+        ensureOfflineSession();
+        return;
+      }
+
       if (!state.playerId) return ensureSession();
       try {
         const data = await api("/api/session/renew", {
@@ -242,11 +315,20 @@ export default function App() {
         refs.playerId.textContent = state.playerId;
       } catch {
         await ensureSession();
-        setStatus("Session renewed with a new player ID.");
+        if (!state.offlineMode) {
+          setStatus("Session renewed with a new player ID.");
+        }
       }
     }
 
     async function loadPassage() {
+      if (state.offlineMode) {
+        const index = Math.floor(Math.random() * LOCAL_PASSAGES.length);
+        state.passage = LOCAL_PASSAGES[index];
+        renderPassage("");
+        return;
+      }
+
       const data = await api("/api/passage", { method: "GET" });
       state.passage = String(data.passage || "");
       renderPassage("");
@@ -312,6 +394,28 @@ export default function App() {
       spawnBurst(tier);
 
       setStatus("Round finished. Start a new one to beat your score.");
+
+      if (state.offlineMode) {
+        const scores = loadLocalScores();
+        const existing = scores.find((row) => row.playerId === state.playerId);
+        if (existing) {
+          existing.bestWpm = Math.max(existing.bestWpm, wpm);
+          existing.attempts += 1;
+          existing.lastScoreAt = Date.now();
+        } else {
+          scores.push({
+            playerId: state.playerId,
+            bestWpm: wpm,
+            attempts: 1,
+            lastScoreAt: Date.now(),
+          });
+        }
+        saveLocalScores(scores);
+        const best = scores.find((row) => row.playerId === state.playerId)?.bestWpm || wpm;
+        refs.bestWpm.textContent = String(best);
+        await loadActiveLeaderboard();
+        return;
+      }
 
       try {
         const result = await api("/api/score", {
@@ -388,15 +492,20 @@ export default function App() {
     refs.typingInput.addEventListener("input", onInput);
 
     const sessionInterval = setInterval(async () => {
-      updateSessionTimer();
+      try {
+        updateSessionTimer();
 
-      const remaining = state.expiresAt - Date.now();
-      if (remaining <= 0) {
-        await ensureSession();
-        setStatus("Session expired. New player ID assigned.");
-        await loadActiveLeaderboard();
-      } else if (remaining < 90 * 1000) {
-        await renewSession();
+        const remaining = state.expiresAt - Date.now();
+        if (remaining <= 0) {
+          await ensureSession();
+          setStatus("Session expired. New player ID assigned.");
+          await loadActiveLeaderboard();
+        } else if (remaining < 90 * 1000) {
+          await renewSession();
+        }
+      } catch {
+        state.offlineMode = true;
+        ensureOfflineSession();
       }
     }, 1000);
 
@@ -415,10 +524,20 @@ export default function App() {
         updateSessionTimer();
         refs.roundTimer.textContent = String(state.roundDuration);
         refs.typingInput.disabled = true;
-        setStatus("Ready. 60-second challenge is set. Hit Start Round.");
-      } catch (err) {
+        if (state.offlineMode) {
+          setStatus("Offline mode active. Typing game is running with local session data.");
+        } else {
+          setStatus("Ready. 60-second challenge is set. Hit Start Round.");
+        }
+      } catch {
+        state.offlineMode = true;
+        ensureOfflineSession();
+        await loadPassage();
+        await loadActiveLeaderboard();
+        updateSessionTimer();
+        refs.roundTimer.textContent = String(state.roundDuration);
         refs.typingInput.disabled = true;
-        setStatus(`Backend unavailable: ${err.message}`);
+        setStatus("Offline mode active. Typing game is running with local session data.");
       }
     })();
 
