@@ -52,9 +52,6 @@ export default function App() {
       leaderboardList: document.getElementById("leaderboardList"),
       activeSessionsMeta: document.getElementById("activeSessionsMeta"),
       particleCanvas: document.getElementById("particleCanvas"),
-      podium1: document.getElementById("podium1"),
-      podium2: document.getElementById("podium2"),
-      podium3: document.getElementById("podium3"),
     };
 
     const particleCtx = refs.particleCanvas.getContext("2d");
@@ -110,34 +107,6 @@ export default function App() {
       if (wpm >= 32) return { name: "Gold", colors: ["#ffd166", "#ff9f43", "#ffffff"] };
       if (wpm >= 18) return { name: "Silver", colors: ["#c4d5e6", "#9ac2d8", "#ffffff"] };
       return { name: "Rookie", colors: ["#8ca7b8", "#3fe0ff", "#ffffff"] };
-    }
-
-    function tierClass(wpm) {
-      const tier = getTier(wpm).name.toLowerCase();
-      return `podium-${tier}`;
-    }
-
-    function renderPodium(rows) {
-      const slots = [refs.podium1, refs.podium2, refs.podium3];
-      slots.forEach((slot, idx) => {
-        if (!slot) return;
-        const row = rows[idx];
-        slot.className = "podium-slot";
-        if (!row) {
-          slot.innerHTML = `<div class='podium-content'><span class='podium-rank'>#${idx + 1}</span><span class='podium-name'>Waiting...</span><span class='podium-speed'>-- WPM</span><span class='tier-badge'>No Tier</span></div>`;
-          return;
-        }
-
-        const tier = getTier(row.bestWpm).name;
-        slot.classList.add("active", tierClass(row.bestWpm));
-        slot.innerHTML =
-          `<div class='podium-content'>` +
-          `<span class='podium-rank'>#${idx + 1}</span>` +
-          `<span class='podium-name'>${row.maskedPlayerId}</span>` +
-          `<span class='podium-speed'>${row.bestWpm} WPM</span>` +
-          `<span class='tier-badge'>${tier}</span>` +
-          `</div>`;
-      });
     }
 
     function resizeParticleCanvas() {
@@ -216,7 +185,6 @@ export default function App() {
     function renderLeaderboard(data) {
       const rows = data.leaderboard || [];
       refs.activeSessionsMeta.textContent = `Active sessions: ${data.activeSessions || 0}`;
-      renderPodium(rows);
 
       if (!rows.length) {
         refs.leaderboardList.innerHTML = "<div class='status'>No scores yet. Finish a round to appear here.</div>";
@@ -650,12 +618,6 @@ export default function App() {
           <div id="leaderboardList" className="leader-list"></div>
         </section>
       </main>
-
-      <section className="podium-strip" id="podiumStrip">
-        <article className="podium-slot" id="podium1"></article>
-        <article className="podium-slot" id="podium2"></article>
-        <article className="podium-slot" id="podium3"></article>
-      </section>
 
       <canvas id="particleCanvas" className="particle-canvas"></canvas>
     </>
