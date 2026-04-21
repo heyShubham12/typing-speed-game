@@ -76,122 +76,18 @@ h2 {
   text-transform: uppercase;
 }
 
+.build-mark {
+  margin: 0.25rem 0 0;
+  color: var(--muted);
+  font-size: 0.82rem;
+}
+
 .topbar {
   display: flex;
   justify-content: space-between;
   gap: 1rem;
   align-items: end;
   margin-bottom: 1rem;
-}
-
-.tagline {
-  margin: 0.4rem 0 0;
-  max-width: 560px;
-  color: #cbe7f7;
-}
-
-.accent-cards {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 0.65rem;
-  margin-bottom: 0.9rem;
-}
-
-.accent-card {
-  border: 1px solid rgba(255, 255, 255, 0.13);
-  border-radius: 12px;
-  background: linear-gradient(130deg, rgba(255, 79, 139, 0.14), rgba(63, 224, 255, 0.12));
-  padding: 0.55rem 0.7rem;
-  font-weight: 600;
-  letter-spacing: 0.01em;
-}
-
-.podium-strip {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 0.7rem;
-  margin-top: 0.95rem;
-}
-
-.podium-slot {
-  position: relative;
-  border-radius: 14px;
-  border: 1px solid rgba(255, 255, 255, 0.16);
-  background: linear-gradient(140deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.02));
-  padding: 0.65rem;
-  min-height: 92px;
-  overflow: hidden;
-}
-
-.podium-slot::before {
-  content: "";
-  position: absolute;
-  inset: -1px;
-  border-radius: 14px;
-  opacity: 0;
-  z-index: 0;
-  transition: opacity 160ms ease;
-}
-
-.podium-slot.active::before {
-  opacity: 1;
-  animation: tierPulse 1800ms ease-in-out infinite;
-}
-
-.podium-gold::before {
-  background: radial-gradient(circle at 25% 0%, rgba(255, 209, 102, 0.45), transparent 50%);
-}
-
-.podium-platinum::before {
-  background: radial-gradient(circle at 25% 0%, rgba(63, 224, 255, 0.45), transparent 50%);
-}
-
-.podium-diamond::before {
-  background: radial-gradient(circle at 25% 0%, rgba(154, 125, 255, 0.45), transparent 50%);
-}
-
-.podium-mythic::before {
-  background: radial-gradient(circle at 25% 0%, rgba(255, 79, 139, 0.5), transparent 50%);
-}
-
-.podium-silver::before {
-  background: radial-gradient(circle at 25% 0%, rgba(196, 213, 230, 0.45), transparent 50%);
-}
-
-.podium-rookie::before {
-  background: radial-gradient(circle at 25% 0%, rgba(140, 167, 184, 0.45), transparent 50%);
-}
-
-.podium-content {
-  position: relative;
-  z-index: 1;
-  display: grid;
-  gap: 0.25rem;
-}
-
-.podium-rank {
-  font-size: 0.78rem;
-  color: var(--muted);
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-}
-
-.podium-name {
-  font-weight: 700;
-}
-
-.podium-speed {
-  font-size: 1.18rem;
-  font-weight: 700;
-}
-
-.tier-badge {
-  justify-self: start;
-  border-radius: 999px;
-  padding: 0.2rem 0.5rem;
-  font-size: 0.75rem;
-  border: 1px solid rgba(255, 255, 255, 0.24);
-  background: rgba(0, 0, 0, 0.22);
 }
 
 @keyframes tierPulse {
@@ -438,8 +334,6 @@ button.ghost {
 }
 
 @media (max-width: 900px) {
-  .accent-cards,
-  .podium-strip,
   .layout,
   .stat-grid {
     grid-template-columns: 1fr;

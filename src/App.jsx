@@ -530,6 +530,7 @@ export default function App() {
       <header className="topbar">
         <div>
           <h1>Typing Speed Game</h1>
+          <p className="build-mark">Build: v2026.04.21</p>
         </div>
         <div className="session-pill">
           <div>
